@@ -10,4 +10,4 @@ on:
 jobs:
 
   build-test:
-    uses: ./.github/workflows/templates/build-test.yml
+    uses: ./.github/workflows/build-test.yml
