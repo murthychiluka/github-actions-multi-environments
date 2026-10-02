@@ -13,17 +13,13 @@ jobs:
     uses: ./.github/workflows/build-test.yml
 
   deploy-dev:
-  needs: build-test
+    needs: build-test
+    uses: ./.github/workflows/deploy.yml
+    with:
+      environment: dev
 
-  uses: ./.github/workflows/deploy.yml
-
-  with:
-    environment: dev
-  
   deploy-qa:
-  needs: deploy-dev
-
-  uses: ./.github/workflows/deploy.yml
-
-  with:
-    environment: qa
+    needs: deploy-dev
+    uses: ./.github/workflows/deploy.yml
+    with:
+      environment: qa
