@@ -11,3 +11,11 @@ jobs:
 
   build-test:
     uses: ./.github/workflows/build-test.yml
+
+  deploy-dev:
+    needs: build-test
+
+    uses: ./.github/workflows/deploy.yml
+
+    with:
+      environment: dev
