@@ -23,3 +23,9 @@ jobs:
     uses: ./.github/workflows/deploy.yml
     with:
       environment: qa
+
+  deploy-prod:
+    needs: deploy-qa
+    uses: ./.github/workflows/deploy.yml
+    with:
+      environment: prod   
