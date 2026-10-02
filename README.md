@@ -263,3 +263,165 @@ Don't duplicate the pipeline for DEV, QA and PROD. Create reusable workflows onc
 
 That pattern is directly applicable when you later build AWS, Azure, or GCP deployment pipelines.
 ```
+```text
+I have a query  in the build-test.yml:  we have run tests. How will this be called to test_app.py?
+ name: Run tests
+        run: |
+          pytest
+
+Yes. This is an important point to understand because pytest automatically discovers test_app.py. You don't explicitly call test_app.py in the YAML.
+What happens in your build-test.yml
+
+You have:
+
+- name: Run tests
+  run: |
+    pytest
+
+When GitHub Actions reaches this step, the runner is already in your repository's working directory because of:
+
+- name: Checkout code
+  uses: actions/checkout@v4
+
+So the runner has something like:
+repository/
+├── app.py
+├── requirements.txt
+├── test_app.py
+└── .github/
+    └── workflows/
+        └── ...
+```
+```text
+
+Then this command:
+
+pytest
+
+starts the pytest test runner.
+How does pytest find test_app.py?
+
+By default, pytest uses test discovery rules.
+
+A file named:
+test_app.py
+
+matches pytest's default test-file pattern:
+test_*.py
+
+So pytest finds:
+test_app.py
+
+Then inside it, suppose you have:
+from app import app
+
+
+def test_home():
+    client = app.test_client()
+
+    response = client.get("/")
+
+    assert response.status_code == 200
+
+Pytest discovers:
+test_home()
+
+because its name starts with:
+test_
+
+So the chain is:
+GitHub Actions
+      │
+      ▼
+run:
+  pytest
+      │
+      ▼
+pytest test discovery
+      │
+      ▼
+test_app.py
+      │
+      ▼
+test_home()
+      │
+      ▼
+assert response.status_code == 200
+Why don't we write this?
+
+You could technically write:
+
+- name: Run tests
+  run: |
+    pytest test_app.py
+
+That explicitly tells pytest:
+
+    Run the tests in test_app.py.
+
+But:
+
+run: |
+  pytest
+
+is more commonly used because pytest automatically discovers all matching test files.
+
+For example, if tomorrow you add:
+test_app.py
+test_api.py
+test_database.py
+test_security.py
+
+you don't need to modify your YAML.
+
+Just:
+
+pytest
+
+will discover them.
+pytest
+ │
+ ├── test_app.py
+ │     └── test_home()
+ │
+ ├── test_api.py
+ │     ├── test_get_books()
+ │     └── test_create_book()
+ │
+ ├── test_database.py
+ │     └── test_connection()
+ │
+ └── test_security.py
+       └── test_headers()
+One more important thing in your workflow
+
+Before pytest runs, we install the dependencies:
+
+- name: Install dependencies
+  run: |
+    python -m pip install --upgrade pip
+    pip install -r requirements.txt
+
+So if requirements.txt contains:
+Flask
+pytest
+
+the GitHub runner gets both Flask and pytest.
+
+Therefore:
+requirements.txt
+       │
+       ▼
+pip install
+       │
+       ├── Flask
+       └── pytest
+                  │
+                  ▼
+             pytest command
+                  │
+                  ▼
+             test_app.py
+
+In short: pytest is the test runner; test_app.py is the test file; test_home() is the individual test. Pytest's discovery rules connect them automatically.
+```
