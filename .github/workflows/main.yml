@@ -1,0 +1,13 @@
+name: Python CI/CD
+
+on:
+  push:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+jobs:
+
+  build-test:
+    uses: ./.github/workflows/templates/build-test.yml
